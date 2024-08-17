@@ -1,86 +1,79 @@
 #===============================================
-# Description: ARMv8
+# Description: X86_64
 # Lisence: MIT
 # By：Jejz
 #===============================================
 
-name: Build_armv8
+name: Build_x86_64[firewall4]
 
 on:
   repository_dispatch:
   workflow_dispatch:
     inputs:
-      checkupdates:
-        description: 'Checkupdates connection to Actions'
+      checkupdates515:
+        description: 'Checkupdates515 connection to Actions'
         required: false
         default: 'false'
-      ssh:
-        description: 'SSH connection to Actions'
+      checkupdates66:
+        description: 'Checkupdates66 connection to Actions'
         required: false
         default: 'false'
-      kernel_version:
-        description: "Select kernel version"
+      ssh515:
+        description: 'SSH515 connection to Actions'
         required: false
-        default: "5.4.228_5.10.161_5.15.100_6.1.8"
-        type: choice
-        options:
-          - 5.4.228_5.10.161_5.15.100_6.1.8
-          - 5.4.228_5.10.161
-          - 5.4.228_5.15.100
-          - 5.10.161_5.15.100
-          - 5.15.100_6.1.8
-          - 5.4.228
-          - 5.10.161
-          - 5.15.100
-          - 6.1.8
+        default: 'false'
+      ssh66:
+        description: 'SSH66 connection to Actions'
+        required: false
+        default: 'false'
   #schedule:
-   # - cron: 16 7,20 * * *
+    #- cron: 5 19 * * *
 
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
   FEEDS_CONF: feeds_config/lean.feeds.conf.default
-  CONFIG_FILE: config/leanlede_config/armv8.config
-  DIY_P1_SH: diy_script/lean_diy/armv8/diy-part1.sh
-  DIY_P2_SH: diy_script/lean_diy/armv8/diy-part2.sh
-  CLASH_KERNEL: arm64
+  CONFIG_FILE: config/leanlede_config/x86-firewall4.config
+  DIY_P1_SH: diy_script/lean_diy/x86/diy-part1.sh
+  DIY_P2_SH: diy_script/lean_diy/x86/diy-part2.sh
+  CLASH_KERNEL: amd64
   UPLOAD_BIN_DIR: false
   UPLOAD_CONFIG: true
   UPLOAD_FIRMWARE: false
   UPLOAD_RELEASE: true
   TZ: Asia/Shanghai
-  FILE_NAME: ARMv8-ROOTFS
-  PRODUCT_NAME: ARMv8
-  
+  FILE_NAME: x86_64
+  PRODUCT_NAME: x86_64
+
 jobs:
   Checka:
     runs-on: ubuntu-latest
     env:
-      REPO_URL_Lede: https://github.com/coolsnowwolf/lede
-      REPO_BRANCH_Lede: master
-      REPO_PATH_Lede : "lede_arm"
+      REPO_URL_firewall4: https://github.com/coolsnowwolf/lede
+      REPO_BRANCH_firewall4: master
+      REPO_PATH_firewall4 : "firewall4_x86_64"
     outputs:
       output: ${{ steps.outputunifreq.outputs.unifreq }}   
     steps:
     - name: Get Commit Hash
       id: getHash
       run: |
-        git clone --depth 1 $REPO_URL_Lede -b $REPO_BRANCH_Lede $REPO_PATH_Lede
-        cd $REPO_PATH_Lede
-        echo "commitHash_arm=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        git clone --depth 1 $REPO_URL_firewall4 -b $REPO_BRANCH_firewall4 $REPO_PATH_firewall4
+        cd $REPO_PATH_firewall4
+        echo "commitHash_x86_64_firewall4=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
         cd
 
     - name: Show Commit Head and Combination Heads
       id: combHeader
       run: |
-        echo "commitHash_arm: ${{ steps.getHash.outputs.commitHash_arm }}"
+        echo "commitHash_x86_64_firewall4: ${{ steps.getHash.outputs.commitHash_x86_64_firewall4 }}"
 
     - name: Compare Commit Hash
       id: cacheHash
       uses: actions/cache@main
       with:
-        path: .commitHash_arm
-        key: HEAD-${{ steps.getHash.outputs.commitHash_arm }}
+        path: .commitHash_x86_64_firewall4
+        key: HEAD-${{ steps.getHash.outputs.commitHash_x86_64_firewall4 }}
 
     - name: Set output for next job
       id: outputunifreq
@@ -91,11 +84,11 @@ jobs:
     - name: Save New Commit Hash
       if: steps.cacheHash.outputs.cache-hit != 'true'
       run: |
-        echo ${{ steps.getHash.outputs.commitHash_arm }} | tee .commitHash_arm
+        echo ${{ steps.getHash.outputs.commitHash_x86_64_firewall4 }} | tee .commitHash_x86_64_firewall4
 # /////////////////////////////////////////////////////////////////////////////////////////////////////////
-  Build_ARMv8-ROOTFS:
-    needs: [Checka]   
-    if: ${{ needs.Checka.outputs.output != 'hello' || github.event.inputs.checkupdates == 'true'}}
+  Build_x86_64_515:
+    needs: [Checka]
+    if: ${{ needs.Checka.outputs.output != 'hello' || github.event.inputs.checkupdates515 == 'true'}}
     runs-on: ubuntu-22.04
 
     steps:
@@ -118,7 +111,7 @@ jobs:
         echo "-----------------------------硬盘信息---------------------------------------------"
         echo -e  "硬盘数量：$(ls /dev/sd* | grep -v [1-9] | wc -l) \n"
         echo "硬盘详情："
-        echo " 系统空间       类型    总数  已用 可用  使用率"
+        echo " 系统空间       类型   总数  已用  可用  使用率"
         df -Th
 
     - name: Initialization environment
@@ -126,7 +119,7 @@ jobs:
         DEBIAN_FRONTEND: noninteractive
       run: |
         sudo -E swapoff -a
-        sudo -E rm -f /swapfile /mnt/swapfile
+        sudo -E rm -f /swapfile
         sudo -E snap set system refresh.retain=2
         sudo -E rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android
         sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
@@ -205,9 +198,15 @@ jobs:
         $GITHUB_WORKSPACE/diy_script/preset-clash-core.sh $CLASH_KERNEL
         $GITHUB_WORKSPACE/diy_script/preset-adguard-core.sh $CLASH_KERNEL
 
+        sed -i 's/CONFIG_LINUX.*/CONFIG_LINUX_5_15=y/g' .config
+
+        sed -i 's/KERNEL_PATCHVER:=*.*/KERNEL_PATCHVER:=5.15/g' target/linux/x86/Makefile
+
+        #sed -i 's/KERNEL_TESTING_PATCHVER:=*.*/KERNEL_TESTING_PATCHVER:=5.15/g' target/linux/x86/Makefile
+
     - name: SSH connection to Actions
       uses: P3TERX/ssh2actions@v1.0.0
-      if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.action, 'ssh')
+      if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh515  != 'false') || contains(github.event.action, 'ssh515')
       env:
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -277,7 +276,7 @@ jobs:
       id: organizer
       run: |
         mkdir -p ./artifact/buildinfo
-        cp -rf openwrt/.config ./artifact/buildinfo/armv8.config
+        cp -rf openwrt/.config ./artifact/buildinfo/x86.config
         cp -rf $(find openwrt/bin/targets/ -type f -name "*.buildinfo" -o -name "*.manifest") ./artifact/buildinfo/
 
     - name: Upload bin directory
@@ -286,23 +285,27 @@ jobs:
       with:
         name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
         path: openwrt/bin
-        
-    - name: Upload config 
+
+    - name: Upload config
       uses: actions/upload-artifact@main
-      if: env.UPLOAD_CONFIG == 'true' && steps.compile.outputs.status == 'success' 
+      if: env.UPLOAD_CONFIG == 'true' && steps.compile.outputs.status == 'success'
       with:
-        name: armv8-config
+        name: x86-515-config
         path: ./artifact/buildinfo/
+
+    - name: Delete files
+      run: |
+        cd openwrt
+        bash  rename.sh
+        Kernel=`grep "_uefi.img.gz" wget/open_dev_md5 | cut -d - -f 2 | cut -d _ -f 2 `
+        echo "KERNEL=$Kernel" >> $GITHUB_ENV
 
     - name: Organize files
       id: organize
       if: steps.compile.outputs.status == 'success'
       run: |
-        cd $GITHUB_WORKSPACE/openwrt/bin/packages
-        tar -zcvf Packages.tar.gz ./*
-        cp Packages.tar.gz $GITHUB_WORKSPACE/openwrt/bin/targets/*/*
-        cd $GITHUB_WORKSPACE/openwrt/bin/targets/*/*
-        rm -rf Packages.tar.gz config.buildinfo feeds.buildinfo openwrt-armvirt-64-default.manifest openwrt-armvirt-64-Image version.buildinfo
+        cd openwrt/bin/targets/*/*
+        rm -rf packages
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
@@ -318,13 +321,14 @@ jobs:
       uses: ncipollo/release-action@v1
       if: env.UPLOAD_RELEASE == 'true' && steps.compile.outputs.status == 'success'
       with:
-        name: ${{ env.DATE }} 🚫「 ${{ env.FILE_NAME }} 」
+        name: ${{ env.DATE }} 🔴「 ${{ env.FILE_NAME }}_${{ env.KERNEL }}[firewall4] 」固件
         allowUpdates: true
         removeArtifacts: true
-        tag: ${{ env.FILE_NAME }}
+        tag: ${{ env.TAG }}_firewall4_${{ env.KERNEL }}
         token: ${{ secrets.GH_TOKEN }}
         body: |
-          - 🔴此为 ARMv8 底包，非完整固件，不可直刷
+          - ⭐️此为 ${{ env.FILE_NAME }}_${{ env.KERNEL }}[firewall4] 固件
+          - 🔴默认IP：192.168.8.3 默认密码：无密码
           - 当前使用版本:【编译前的最后一次[➦主源码](https://github.com/coolsnowwolf/lede)更新记录】
           - ★ 感谢源码作者无私分享！
           - 🎈🎈🎈 更新信息 🎈🎈🎈
@@ -334,7 +338,7 @@ jobs:
           - hash: ${{ env.hash }}
         artifacts: ${{ env.FIRMWARE }}/*
 
-    - name: Total time
+    - name: Completion time 
       run: |
         echo "END=$(date "+%Y-%m-%d %H:%M:%S")" >> $GITHUB_ENV
         end=$(date +%s)
@@ -351,7 +355,7 @@ jobs:
         to: ${{ secrets.TELEGRAM_TO }}
         token: ${{ secrets.TELEGRAM_TOKEN }}
         message: |
-          🌺${{ env.PRODUCT_NAME }}编译完成
+          ♨${{ env.FILE_NAME }}_${{ env.KERNEL }}[firewall4]编译完成
           开始时间：${{ env.DATE }}
           完成时间：${{ env.END }}
           编译耗时：${{ env.time }}
@@ -361,15 +365,15 @@ jobs:
           内容: ${{ env.commit }}
           hash: ${{ env.hash }}
           ✪ ✣ ✤ ✥ ✦ ❉ ❦ ❧ ❃ ❂ ❁ ❀
-          📍: https://github.com/Jejz168/OpenWrt/releases/tag/ARMv8-ROOTFS
+          📍: https://github.com/Jejz168/OpenWrt/releases/tag/${{ env.TAG }}_firewall4_${{ env.KERNEL }}
 
     - name: Push notification upload success
       uses: xhnmt/pushplus-action@main
       with:
         token: ${{ secrets.PUSH_PLUS_TOKEN }}
-        title: "${{ env.PRODUCT_NAME }}编译完成"
+        title: "[firewall4]${{ env.FILE_NAME }}_${{ env.KERNEL }}编译完成"
         content: |
-          🌺${{ env.PRODUCT_NAME }}编译完成
+          ♨${{ env.FILE_NAME }}_${{ env.KERNEL }}[firewall4]编译完成
           开始时间：${{ env.DATE }}
           完成时间：${{ env.END }}
           编译耗时：${{ env.time }}
@@ -379,98 +383,261 @@ jobs:
           内容: ${{ env.commit }}
           hash: ${{ env.hash }}
           ✪ ✣ ✤ ✥ ✦ ❉ ❦ ❧ ❃ ❂ ❁ ❀
-          📍: https://github.com/Jejz168/OpenWrt/releases/tag/ARMv8-ROOTFS
-# /////////////////////////////////////////////////////////////////////////////////////////////////////////
-  Build_ARMv8_OpenWrt:
-    needs: [Build_ARMv8-ROOTFS]
+          📍: https://github.com/Jejz168/OpenWrt/releases/tag/${{ env.TAG }}_firewall4_${{ env.KERNEL }}
+# //////////////////////////////////////////////////////////////////////////////////////////////
+  Build_x86_64_66:
+    needs: [Checka]
+    if: ${{ needs.Checka.outputs.output != 'hello' || github.event.inputs.checkupdates66 == 'true'}}
     runs-on: ubuntu-22.04
 
     steps:
     - name: Checkout
       uses: actions/checkout@main
 
+    - name: Check server configuration
+      run: |
+        echo "警告⚠"
+        echo "若分配的服务器性能不足，务必及时取消，重新运行！"
+        echo "已知编译成功CPU型号：8370C,8272CL"
+        echo "已知性能不足CPU型号：8171M"
+        echo -e "-------------- ------------CPU信息------------------------------------------\n"
+        echo "CPU物理数量:$(cat /proc/cpuinfo| grep "physical id"| sort| uniq| wc -l)"
+        echo -e "CPU核心及版本信息：$(cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c) \n"
+        echo "-------------------------------内存信息-------------------------------------------"
+        echo "已安装内存详细信息："
+        sudo lshw -short -C memory | grep GiB
+        echo -e "\n"
+        echo "-----------------------------硬盘信息---------------------------------------------"
+        echo -e  "硬盘数量：$(ls /dev/sd* | grep -v [1-9] | wc -l) \n"
+        echo "硬盘详情："
+        echo " 系统空间       类型   总数  已用  可用  使用率"
+        df -Th
+
     - name: Initialization environment
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-        sudo -E rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d /usr/local/lib/android
+        sudo -E swapoff -a
+        sudo -E rm -f /swapfile
+        sudo -E snap set system refresh.retain=2
+        sudo -E rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android
+        sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
+        [ -n "$AGENT_TOOLSDIRECTORY" ] && sudo rm -rf "$AGENT_TOOLSDIRECTORY"
         sudo -E apt-get update
         sudo -E apt-get -y install $(curl -fsSL https://is.gd/depends_ubuntu_2204)
+        sudo -E apt-get -y install libfuse-dev clang
         sudo -E apt-get -y autoremove --purge
         sudo -E apt-get clean
+        sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
+        sudo rm -rf ~/{.cargo,.dotnet,.rustup}
         sudo timedatectl set-timezone "$TZ"
-        sudo mkdir -p /workdir
-        sudo chown $USER:$GROUPS /workdir
+        df -Th
+
+    - name: Create VG & LV
+      run: |
+        mnt_size=$(expr $(df -h /mnt | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 1)
+        root_size=$(expr $(df -h / | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 4)
+        sudo truncate -s "$mnt_size"G /mnt/mnt.img
+        sudo truncate -s "$root_size"G /root.img
+        sudo losetup /dev/loop6 /mnt/mnt.img
+        sudo losetup /dev/loop7 /root.img
+        sudo pvcreate /dev/loop6
+        sudo pvcreate /dev/loop7
+        sudo vgcreate github /dev/loop6 /dev/loop7
+        sudo lvcreate -n runner -l 100%FREE github
+        sudo mkfs.xfs /dev/github/runner
+
+    - name: Mount LV
+      run: |
+        sudo mkdir -p /builder
+        sudo mount /dev/github/runner /builder
+        sudo chown -R runner.runner /builder
+        df -Th
 
     - name: Clone source code
-      working-directory: /workdir
+      working-directory: /builder
       run: |
         df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH openwrt
-        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+        ln -sf /builder/openwrt $GITHUB_WORKSPACE/openwrt
         cd openwrt
-        Revision=$(grep "DISTRIB_REVISION=" package/lean/default-settings/files/zzz-default-settings | awk -F"'" '{print $2}')
-        Author=$(git show -s --date=short --format="Author: %an")
-        Date=$(git show -s --date=short --format="date: %ci")
-        Commit=$(git show -s --date=short --format="commit: %s")
-        Hash=$(git show -s --date=short --format="commit hash: %h")
+        Author=$(git show -s --date=short --format="%an")
+        Date=$(git show -s --date=short --format="%ci")
+        Commit=$(git show -s --date=short --format="%s")
+        Hash=$(git show -s --date=short --format="%H")
         echo "author=$Author" >> $GITHUB_ENV
         echo "date=$Date" >> $GITHUB_ENV
         echo "commit=$Commit" >> $GITHUB_ENV
         echo "hash=$Hash" >> $GITHUB_ENV
         echo "DATE=$(date "+%Y-%m-%d %H:%M:%S")" >> $GITHUB_ENV
         echo "TAG=$(date "+%Y%m%d")" >> $GITHUB_ENV
-        echo "TAG=$(date "+%Y%m%d")" >> $GITHUB_ENV
         echo "start=$(date +%s)" >> $GITHUB_ENV
-        echo "revision=$Revision" >> $GITHUB_ENV
 
-    - name: Package armvirt as openwrt
-      uses: ophub/flippy-openwrt-actions@main
-      if: (!cancelled())
+    - name: Load custom feeds
+      run: |
+        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
+        chmod +x $DIY_P1_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P1_SH
+
+    - name: Update feeds
+      run: cd openwrt && ./scripts/feeds update -a
+
+    - name: Install feeds
+      run: cd openwrt && ./scripts/feeds install -a
+
+    - name: Load custom configuration
+      run: |
+        [ -e files ] && mv files openwrt/files
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+        chmod +x $GITHUB_WORKSPACE/diy_script/*.sh
+        chmod +x $DIY_P2_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P2_SH
+        $GITHUB_WORKSPACE/diy_script/preset-clash-core.sh $CLASH_KERNEL
+        $GITHUB_WORKSPACE/diy_script/preset-adguard-core.sh $CLASH_KERNEL
+        
+        sed -i 's/CONFIG_LINUX.*/CONFIG_LINUX_6_6=y/g' .config
+        
+        sed -i 's/KERNEL_PATCHVER:=*.*/KERNEL_PATCHVER:=6.6/g' target/linux/x86/Makefile
+        
+        #sed -i 's/KERNEL_TESTING_PATCHVER:=*.*/KERNEL_TESTING_PATCHVER:=6.6/g' target/linux/x86/Makefile
+        
+    - name: SSH connection to Actions
+      uses: P3TERX/ssh2actions@v1.0.0
+      if: (github.event.inputs.ssh66 == 'true' && github.event.inputs.ssh66  != 'false') || contains(github.event.action, 'ssh66')
       env:
-        OPENWRT_ARMVIRT: https://github.com/Jejz168/OpenWrt/releases/download/ARMv8-ROOTFS/openwrt-armvirt-64-generic-rootfs.tar.gz
-        PACKAGE_SOC: s905d_s905x3
-        WHOAMI: Jejz
-        OPENWRT_VER: ${{ github.event.inputs.openwrt_version }}
-        DISTRIB_REVISION: ${{ env.revision }} (By @Jejz build $(TZ=UTC-8 date "+%Y-%m-%d %H:%M"))
-        KERNEL_REPO_URL: https://github.com/breakings/OpenWrt/releases/tag/kernel_stable
-        KERNEL_VERSION_NAME: ${{ github.event.inputs.kernel_version }}
-        KERNEL_AUTO_LATEST: true
-        GZIP_IMGS: .gz
-        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
 
-    - name: Upload artifact to Actions
-      uses: kittaakos/upload-artifact-as-is@master
-      if: env.PACKAGED_STATUS == 'success' && env.UPLOAD_FIRMWARE == 'true'
+    - name: Output compilation information
+      run: |
+        cd openwrt
+        echo " 系统空间       类型  总数  已用  可用  使用率"
+        df -hT $PWD
+        echo
+        echo "=========================================="
+        grep -i CONFIG_PACKAGE_luci-app .config | grep  -v \# > Plug-in
+        grep -i CONFIG_PACKAGE_luci-theme .config | grep  -v \# >> Plug-in
+        sed -i '/INCLUDE/d' Plug-in > /dev/null 2>&1
+        sed -i 's/CONFIG_PACKAGE_/、/g' Plug-in
+        sed -i '/Transparent_Proxy/d' Plug-in > /dev/null 2>&1
+        sed -i 's/=y/\ /g' Plug-in
+        awk '$0=NR$0' Plug-in > Plug-2
+        awk '{print "	" $0}' Plug-2 > Plug-in
+        echo
+        echo
+        echo "	      已选插件列表"
+        cat Plug-in
+        rm -rf {Plug-in,Plug-2}
+        echo
+        echo "=========================================="
+        echo
+        echo
+        echo "输出完整插件信息..."
+        echo
+        echo
+        cat .config
+
+    - name: Download package
+      id: package
+      run: |
+        cd openwrt
+        make defconfig
+        make download -j8
+        find dl -size -1024c -exec ls -l {} \;
+        find dl -size -1024c -exec rm -f {} \;
+
+    - name: Compile the firmware
+      id: compile
+      run: |
+        cd openwrt
+        echo -e "$(nproc) thread compile"
+        make -j$(nproc) || make -j1 V=s
+        echo "status=success" >> $GITHUB_OUTPUT
+        grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
+        [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
+        echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+
+    - name: Check space usage
+      run: |
+        echo "=========================================="
+        echo "----------------空间使用-------------------"
+        echo "=========================================="
+        echo " 系统空间      类型   总数  已用  可用 使用率"
+        df -hT
+        echo "=========================================="
+        du -h --max-depth=1 openwrt/ --exclude=build_dir --exclude=bin
+        du -h --max-depth=1 openwrt/build_dir
+        du -h --max-depth=1 openwrt/bin
+
+    - name: Organize firmware files
+      id: organizer
+      run: |
+        mkdir -p ./artifact/buildinfo
+        cp -rf openwrt/.config ./artifact/buildinfo/x86.config
+        cp -rf $(find openwrt/bin/targets/ -type f -name "*.buildinfo" -o -name "*.manifest") ./artifact/buildinfo/
+
+    - name: Upload bin directory
+      uses: actions/upload-artifact@main
+      if: env.UPLOAD_BIN_DIR == 'true' && steps.compile.outputs.status == 'success'
       with:
-        path: ${{ env.PACKAGED_OUTPUTPATH }}/
+        name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+        path: openwrt/bin
 
-    - name: Upload openwrt to release
+    - name: Upload config
+      uses: actions/upload-artifact@main
+      if: env.UPLOAD_CONFIG == 'true' && steps.compile.outputs.status == 'success'
+      with:
+        name: x86-66-config
+        path: ./artifact/buildinfo/
+
+    - name: Delete files
+      run: |
+        cd openwrt 
+        bash  rename.sh
+        Kernel=`grep "_uefi.img.gz" wget/open_dev_md5 | cut -d - -f 2 | cut -d _ -f 2 `
+        echo "KERNEL=$Kernel" >> $GITHUB_ENV
+
+    - name: Organize files
+      id: organize
+      if: steps.compile.outputs.status == 'success'
+      run: |
+        cd openwrt/bin/targets/*/*
+        rm -rf packages
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: Upload firmware directory
+      uses: actions/upload-artifact@main
+      if: env.UPLOAD_FIRMWARE == 'true' && steps.organize.outputs.status == 'success'
+      with:
+        name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+        path: ${{ env.FIRMWARE }}
+
+    - name: Create release
+      id: release
       uses: ncipollo/release-action@v1
-      if: env.PACKAGED_STATUS == 'success'
+      if: env.UPLOAD_RELEASE == 'true' && steps.compile.outputs.status == 'success'
       with:
-        name: ${{ env.DATE }} 「 ${{ env.PRODUCT_NAME }} 」固件
+        name: ${{ env.DATE }} 🔴「 ${{ env.FILE_NAME }}_${{ env.KERNEL }}[firewall4] 」固件
         allowUpdates: true
         removeArtifacts: true
-        tag: ${{ env.PRODUCT_NAME }}
+        tag: ${{ env.TAG }}_firewall4_${{ env.KERNEL }}
         token: ${{ secrets.GH_TOKEN }}
         body: |
-          - 🔴默认 IP：192.168.8.8 默认密码：password
-          - 🔴WiFi默认密码：password
-          - 🔥此为 ARMv8-Docker 固件，集成一些日常常用插件
-          - 安装到 EMMC：系统 → 晶晨宝盒 → 安装 OpenWrt → 选择型号 → 安装
-          - 升级 OpenWrt：系统 → 晶晨宝盒 → 手动上传更新 或者 在线下载更新
-          - 常见问题及注意事项请参考恩山F大➦[最新帖](https://www.right.com.cn/forum/thread-4076037-1-1.html)
-          - 当前使用版本:【编译前的最后一次➦[主源码](https://github.com/coolsnowwolf/lede)更新记录】
+          - ⭐️此为 ${{ env.FILE_NAME }}_${{ env.KERNEL }}[firewall4] 固件
+          - 🔴默认IP：192.168.8.3 默认密码：无密码
+          - 当前使用版本:【编译前的最后一次[➦主源码](https://github.com/coolsnowwolf/lede)更新记录】
           - ★ 感谢源码作者无私分享！
           - 🎈🎈🎈 更新信息 🎈🎈🎈
           - 作者: ${{ env.author }}
-          - 时间: ${{ env.date }}
-          - 内容: ${{ env.commit }}
+          - 时间: ${{ env.date }} 
+          - 内容: ${{ env.commit }}        
           - hash: ${{ env.hash }}
-        artifacts: ${{ env.PACKAGED_OUTPUTPATH }}/*
+        artifacts: ${{ env.FIRMWARE }}/*
 
-    - name: Total time
+    - name: Completion time 
       run: |
         echo "END=$(date "+%Y-%m-%d %H:%M:%S")" >> $GITHUB_ENV
         end=$(date +%s)
@@ -487,7 +654,7 @@ jobs:
         to: ${{ secrets.TELEGRAM_TO }}
         token: ${{ secrets.TELEGRAM_TOKEN }}
         message: |
-          💥${{ env.PRODUCT_NAME }}打包完成
+          ♨️ 🐳${{ env.FILE_NAME }}_${{ env.KERNEL }}[firewall4]编译完成
           开始时间：${{ env.DATE }}
           完成时间：${{ env.END }}
           编译耗时：${{ env.time }}
@@ -497,16 +664,15 @@ jobs:
           内容: ${{ env.commit }}
           hash: ${{ env.hash }}
           ✪ ✣ ✤ ✥ ✦ ❉ ❦ ❧ ❃ ❂ ❁ ❀
-          📍: https://github.com/Jejz168/OpenWrt/releases/tag/${{ env.PRODUCT_NAME }}
+          📍: https://github.com/Jejz168/OpenWrt/releases/tag/${{ env.TAG }}_firewall4_${{ env.KERNEL }}
 
     - name: Push notification upload success
       uses: xhnmt/pushplus-action@main
       with:
         token: ${{ secrets.PUSH_PLUS_TOKEN }}
-        title: "${{ env.PRODUCT_NAME }}打包完成"
+        title: "[firewall4]${{ env.FILE_NAME }}_${{ env.KERNEL }}编译完成"
         content: |
-          💥${{ env.PRODUCT_NAME }}打包完成
-          开始时间：${{ env.DATE }}
+          ♨️ 🐳${{ env.FILE_NAME }}_${{ env.KERNEL }}[firewall4]编译完成
           完成时间：${{ env.END }}
           编译耗时：${{ env.time }}
           🎈🎈🎈 更新信息 🎈🎈🎈
@@ -515,25 +681,4 @@ jobs:
           内容: ${{ env.commit }}
           hash: ${{ env.hash }}
           ✪ ✣ ✤ ✥ ✦ ❉ ❦ ❧ ❃ ❂ ❁ ❀
-          📍: https://github.com/Jejz168/OpenWrt/releases/tag/${{ env.PRODUCT_NAME }}
-# //////////////////////////////////////////////////////////////////////////////////////////////
-  Cleaning:
-    if: ${{ always() }}
-    needs: [Checka,Build_ARMv8-ROOTFS,Build_ARMv8_OpenWrt]
-    runs-on: ubuntu-latest
-    steps:
-    - name: Delete workflow runs
-      uses: Jejz168/delete-workflow-runs@main
-      with:
-        retain_days: 8
-        keep_minimum_runs: 2
-
-    - name: Remove old Releases
-      uses: Jejz168/delete-older-releases@master
-      if: env.UPLOAD_RELEASE == 'true' 
-      with:
-        keep_latest: 36
-        delete_tags: true
-        delete_tag_pattern: _
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          📍: https://github.com/Jejz168/OpenWrt/releases/tag/${{ env.TAG }}_firewall4_${{ env.KERNEL }}
